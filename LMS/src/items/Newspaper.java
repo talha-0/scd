@@ -17,7 +17,12 @@ public class Newspaper extends Item {
     public void set_title(String t){
         super.set_title(t);
     }
-
+    public String get_author() {
+        return publisherCompany;
+    }
+    public int get_year() {
+        return 0;
+    }
     @Override
     public void displayInfo() {
         System.out.println("Type: Newspaper");

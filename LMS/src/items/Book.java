@@ -11,6 +11,12 @@ public class Book extends Item {
         this.author = author;
         this.year = year;
     }
+    public String get_author() {
+        return author;
+    }
+    public int get_year() {
+        return year;
+    }
     @Override
     public double calculateCost() {
         return getCost() + (0.2 * getCost()) + GST;

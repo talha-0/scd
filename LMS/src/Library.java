@@ -116,7 +116,9 @@ public class Library {
             System.out.println("Item not found.");
         }
     }
-    
+    public ArrayList<Item> get_items() {
+        return items;
+    }
     public Item getItemById(int id) {
         for (Item item : items) {
             if (item.get_id() == id) {

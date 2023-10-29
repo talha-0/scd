@@ -4,8 +4,9 @@ import abstractclasses.Item;
 import items.*;
 
 public class LibraryManagementSystem {
+
+    private static final Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
         Library library = new Library();
         library.loadItemsFromFile("items.txt");
         while (true) {

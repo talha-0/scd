@@ -1,5 +1,11 @@
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
+
+import abstractclasses.Item;
+import items.Book;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,21 +14,37 @@ public class LibraryManagementSystemGUI extends JFrame {
     private Library library;
     private JTable item_table;
     private DefaultTableModel item_table_model;
+    private JButton edit_button;
+    private JButton remove_item_button;
+
+    private class selected_item {
+        int item_id;
+        int row;
+        public selected_item(int item, int row) {
+            item_id = item;
+            this.row = row;
+        }
+    }
+
     public LibraryManagementSystemGUI(String file_name) {
         super("Library Management System");
         this.library = new Library();
         library.loadItemsFromFile(file_name);
         item_table_model = new DefaultTableModel();
         item_table = new JTable(item_table_model);
+        edit_button = new JButton("Edit");
+        remove_item_button = new JButton("Remove Item");
+
         JScrollPane scrollPane = new JScrollPane(item_table);
         JButton add_item_button = new JButton("Add Item");
-        JButton edit_button = new JButton("Edit");
-        JButton remove_item_button = new JButton("Remove Item");
         JButton hot_picks_button = new JButton("Hot Picks");
+        item_table_model.addColumn("");
         item_table_model.addColumn("Title");
         item_table_model.addColumn("Author");
         item_table_model.addColumn("Year");
         item_table_model.addColumn("Read Item");
+
+        update_table();
 
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
@@ -39,7 +61,7 @@ public class LibraryManagementSystemGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 add_item_button_action_performed();
             }
-        });   
+        });
         edit_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -58,16 +80,120 @@ public class LibraryManagementSystemGUI extends JFrame {
                 hot_picks_button_action_performed();
             }
         });
-        setVisible(true);  
+
+        ListSelectionModel selectionModel = item_table.getSelectionModel();
+        selectionModel.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                edit_button.setEnabled(!selectionModel.isSelectionEmpty());
+                remove_item_button.setEnabled(!selectionModel.isSelectionEmpty());
+            }
+        });
+
+        TableColumnModel columnModel = item_table.getColumnModel();
+        columnModel.getColumn(0).setMinWidth(0);
+        columnModel.getColumn(0).setMaxWidth(0);
+        remove_item_button.setEnabled(false);
+        edit_button.setEnabled(false);
+
+        setVisible(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(500, 500);
     }
+
+    private void update_table() {
+        item_table_model.setRowCount(0);
+        for (Item item : library.get_items()) {
+            item_table_model.addRow(new Object[]{"",item.get_title(), item.get_author(), item.get_year(), "Read Item"});
+            int row = item_table_model.getRowCount() - 1;
+            int item_id = item.get_id();
+            selected_item display_item = new selected_item(item_id, row);
+            item_table_model.setValueAt(display_item, row, 0);
+        }
+    }
+
     private void add_item_button_action_performed() {
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+        JTextField titleField = new JTextField();
+        JTextField authorField = new JTextField();
+        JTextField yearField = new JTextField();
+        
+        panel.add(new JLabel("Title:"));
+        panel.add(titleField);
+        panel.add(new JLabel("Author:"));
+        panel.add(authorField);
+        panel.add(new JLabel("Year:"));
+        panel.add(yearField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add Item",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String title = titleField.getText();
+            String author = authorField.getText();
+            String yearStr = yearField.getText();
+
+            if (title.isEmpty() || author.isEmpty() || yearStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Invalid Input");
+            } else {
+                try {
+                    int year = Integer.parseInt(yearStr);
+                    Book book = new Book(title, author, year, 0, 0);
+                    library.addItem(book);
+                    update_table();
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Invalid Input");
+                }
+            }
+        }
     }
+
     private void edit_button_action_performed() {
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+        JTextField titleField = new JTextField();
+        JTextField authorField = new JTextField();
+        JTextField yearField = new JTextField();
+        
+        panel.add(new JLabel("Title:"));
+        panel.add(titleField);
+        panel.add(new JLabel("Author:"));
+        panel.add(authorField);
+        panel.add(new JLabel("Year:"));
+        panel.add(yearField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Item",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String title = titleField.getText();
+            String author = authorField.getText();
+            String yearStr = yearField.getText();
+
+            if (title.isEmpty() || author.isEmpty() || yearStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Invalid Input");
+            } else {
+                try {
+                    int year = Integer.parseInt(yearStr);
+                    Book book = new Book(title, author, year, 0, 0);
+                    library.addItem(book);
+                    library.deleteItem(((selected_item)item_table_model.getValueAt(item_table.getSelectedRow(), 0)).item_id);
+                    update_table();
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Invalid Input");
+                }
+            }
+        }
     }
+
     private void remove_item_button_action_performed() {
+        library.deleteItem(((selected_item)item_table_model.getValueAt(item_table.getSelectedRow(), 0)).item_id);
+        update_table();
     }
+
     private void hot_picks_button_action_performed() {
+        // Implement logic for hot picks button
     }
+
     public static void main(String[] args) {
         LibraryManagementSystemGUI library_management_system_gui = new LibraryManagementSystemGUI("items.txt");
         library_management_system_gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

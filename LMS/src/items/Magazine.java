@@ -12,6 +12,12 @@ public class Magazine extends Item {
         this.authors = authors;
         publisherCompany = publisher;
     }
+    public String get_author() {
+        return publisherCompany;
+    }
+    public int get_year() {
+        return 0;
+    }
     @Override
     public double calculateCost() {
         return getCost() * getPopularityCount();

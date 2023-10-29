@@ -17,6 +17,8 @@ public abstract class Item implements Configuration {
         this.popularityCount = popularityCount;
         this.cost = cost;
     }
+    public abstract String get_author();
+    public abstract int get_year();
     public double getCost() {
         return cost;
     }
