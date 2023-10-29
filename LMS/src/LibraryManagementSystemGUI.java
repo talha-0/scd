@@ -9,22 +9,27 @@ import items.Book;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 public class LibraryManagementSystemGUI extends JFrame {
     private Library library;
     private JTable item_table;
     private DefaultTableModel item_table_model;
+    // two buttons to enable/disable
     private JButton edit_button;
     private JButton remove_item_button;
-
+    // class to store the selected item
     private class selected_item {
         int item_id;
         public selected_item(int item) {
             item_id = item;
         }
     }
-
+    
     public LibraryManagementSystemGUI(String file_name) {
         super("Library Management System");
         this.library = new Library();
@@ -80,6 +85,8 @@ public class LibraryManagementSystemGUI extends JFrame {
             }
         });
 
+
+        // Add selection listener to decide when to enable/disable buttons
         ListSelectionModel selectionModel = item_table.getSelectionModel();
         selectionModel.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -89,9 +96,26 @@ public class LibraryManagementSystemGUI extends JFrame {
             }
         });
 
+        // Read item button
+        item_table.addMouseListener(
+            new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = item_table.rowAtPoint(e.getPoint());
+                    int col = item_table.columnAtPoint(e.getPoint());
+                    if (col == 4) {
+                        int item_id = ((selected_item)item_table_model.getValueAt(row, 0)).item_id;
+                        read_book(library.getItemById(item_id));
+                    }
+                }
+            }
+        );
+
+        // Hide the first column with id information
         TableColumnModel columnModel = item_table.getColumnModel();
         columnModel.getColumn(0).setMinWidth(0);
         columnModel.getColumn(0).setMaxWidth(0);
+        // Disable buttons by default
         remove_item_button.setEnabled(false);
         edit_button.setEnabled(false);
 
@@ -99,8 +123,30 @@ public class LibraryManagementSystemGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 500);
     }
-
+    private void read_book(Item item){
+        String title = item.get_title().strip();
+        String filename = title+".txt";
+        System.out.println(filename);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))){
+            StringBuilder content = new StringBuilder();
+            String line;
+            while((line = reader.readLine()) != null){
+                content.append(line);
+                content.append("\n");
+            }
+            JTextArea textArea = new JTextArea(content.toString());
+            textArea.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(textArea);
+            JFrame frame = new JFrame(title);
+            frame.setContentPane(scrollPane);
+            frame.setSize(500, 500);
+            frame.setVisible(true);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Book Not found!! Maybe missing?");
+        }
+    }
     private void update_table() {
+        // Load items from library
         item_table_model.setRowCount(0);
         for (Item item : library.get_items()) {
             item_table_model.addRow(new Object[]{"",item.get_title(), item.get_author(), item.get_year(), "Read Item"});
