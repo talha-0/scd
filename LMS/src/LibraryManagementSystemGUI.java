@@ -9,6 +9,7 @@ import items.Book;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class LibraryManagementSystemGUI extends JFrame {
     private Library library;
@@ -19,10 +20,8 @@ public class LibraryManagementSystemGUI extends JFrame {
 
     private class selected_item {
         int item_id;
-        int row;
-        public selected_item(int item, int row) {
+        public selected_item(int item) {
             item_id = item;
-            this.row = row;
         }
     }
 
@@ -107,7 +106,7 @@ public class LibraryManagementSystemGUI extends JFrame {
             item_table_model.addRow(new Object[]{"",item.get_title(), item.get_author(), item.get_year(), "Read Item"});
             int row = item_table_model.getRowCount() - 1;
             int item_id = item.get_id();
-            selected_item display_item = new selected_item(item_id, row);
+            selected_item display_item = new selected_item(item_id);
             item_table_model.setValueAt(display_item, row, 0);
         }
     }
@@ -161,8 +160,13 @@ public class LibraryManagementSystemGUI extends JFrame {
         panel.add(new JLabel("Year:"));
         panel.add(yearField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Item",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            panel, 
+            "Edit Item",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
 
         if (result == JOptionPane.OK_OPTION) {
             String title = titleField.getText();
@@ -191,7 +195,30 @@ public class LibraryManagementSystemGUI extends JFrame {
     }
 
     private void hot_picks_button_action_performed() {
-        // Implement logic for hot picks button
+        library.displayHotPicks();
+        ArrayList<Item> items = library.get_items();
+        JPanel panel = new JPanel(){
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                int bar_width = getWidth() / items.size();
+                int max_height = getHeight()-30;
+                int i=0;
+                for(Item item:items){
+                    int popularity = item.getPopularityCount();
+                    int bar_height = (int) (((double)popularity / items.get(0).getPopularityCount()) * max_height);
+                    g.setColor(Color.RED);
+                    g.fillRect(i*bar_width, max_height-bar_height, bar_width, bar_height);
+                    g.setColor(Color.BLACK);
+                    g.drawString(item.get_title()+"("+popularity+")", i*bar_width, max_height+20);
+                    i++;
+                }
+            }
+        };
+        JFrame frame = new JFrame("Hot Picks");
+        frame.setContentPane(panel);
+        frame.setSize(500, 500);
+        frame.setVisible(true);
     }
 
     public static void main(String[] args) {
